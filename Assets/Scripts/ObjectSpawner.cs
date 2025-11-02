@@ -1,115 +1,97 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
 using UnityEngine;
 using TMPro;
 
 public class ObjectSpawner : MonoBehaviour
 {
-    [Header("Настройки спавна")]
-    public Transform player;
-    public float spawnDistance = 30f;
-    public float laneDistance = 2f;
-    public float waterHeight = 0f;
-    public float objectLifetime = 12f;
-    public float spawnCheckRadius = 0.5f; // радиус проверки пересечений
+    [Header("References")]
+    public GameObject letterPrefab;     // Префаб с TMP_Text и компонентом Letter
+    public GameObject obstaclePrefab;   // Префаб препятствия
+    public Transform player;            // Ссылка на игрока
 
-    [Header("Префабы")]
-    public GameObject letterPrefab3D;
-    public GameObject obstaclePrefab;
+    [Header("Spawn Settings")]
+    public float spawnDistance = 25f;   // На каком расстоянии впереди игрока спавнится объект
+    public float spawnInterval = 2f;    // Интервал между спавнами
+    public float rowOffset = 3.5f;      // Расстояние между рядами (по оси X)
+    public int maxObjectsPerRow = 3;    // Чтобы не было наложений
 
-    private List<GameObject> spawnedObjects = new List<GameObject>();
-    private System.Random rnd = new System.Random();
+    private float[] rows;               // Координаты рядов по X
+    private GameController gc;
 
-    // ----------------------------------
-    private Vector3 GetLanePosition(int laneIndex)
+    private void Start()
     {
-        float x = (laneIndex - 1) * laneDistance;
-        float z = player.position.z + spawnDistance;
-        return new Vector3(x, waterHeight, z);
+        rows = new float[] { -rowOffset, 0, rowOffset };
+        gc = FindObjectOfType<GameController>();
     }
 
-    private bool IsPositionFree(Vector3 position)
+    /// <summary>
+    /// Запускает бесконечный цикл спавна объектов
+    /// </summary>
+    public IEnumerator StartSpawning()
     {
-        // Проверяем только на буквы и препятствия
-        Collider[] hits = Physics.OverlapSphere(position, spawnCheckRadius);
-        foreach (var hit in hits)
+        Debug.Log("🌱 Начинаем спавн объектов...");
+
+        while (true)
         {
-            // Игнорируем игрока, землю и другие ненужные коллайдеры
-            if (hit.gameObject.CompareTag("Letter") || hit.gameObject.CompareTag("Obstacle"))
-                return false;
+            TrySpawnObjectsBatch();
+            yield return new WaitForSeconds(spawnInterval);
         }
-        return true;
     }
 
-
-    public GameObject SpawnLetter(char letter, int laneIndex)
+    /// <summary>
+    /// Один цикл спавна: проверяет все ряды и спавнит объекты с шансом
+    /// </summary>
+    private void TrySpawnObjectsBatch()
     {
-        Vector3 spawnPos = GetLanePosition(laneIndex);
-
-        // Проверка, свободна ли позиция
-        if (!IsPositionFree(spawnPos))
+        foreach (float rowX in rows)
         {
-            Debug.Log($"⚠️ Спавн буквы {letter} отменён: место занято");
-            return null;
-        }
+            float chance = Random.value;
 
-        GameObject obj = Instantiate(letterPrefab3D, spawnPos, Quaternion.identity);
-        TMP_Text tmp = obj.GetComponent<TMP_Text>();
-        if (tmp != null) tmp.text = letter.ToString();
-
-        spawnedObjects.Add(obj);
-        Destroy(obj, objectLifetime);
-
-        Debug.Log($"🅰️ Спавн буквы {letter} в ряду {laneIndex} на позиции {spawnPos}");
-        return obj;
-    }
-
-    public void SpawnNoise()
-    {
-        float chance = Random.value;
-        if (chance < 0.3f) // буква
-        {
-            int lane = rnd.Next(0, 3);
-            char letter = GetRandomLetter();
-            SpawnLetter(letter, lane);
-        }
-        else if (chance < 0.5f) // препятствие
-        {
-            int lane = rnd.Next(0, 3);
-            Vector3 spawnPos = GetLanePosition(lane);
-            if (!IsPositionFree(spawnPos))
+            if (chance < 0.3f)
             {
-                Debug.Log($"⚠️ Спавн препятствия отменён: место занято");
-                return;
+                // 30% шанс — буква
+                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
+                SpawnLetter(pos);
             }
-            GameObject obj = Instantiate(obstaclePrefab, spawnPos, Quaternion.identity);
-            spawnedObjects.Add(obj);
-            Destroy(obj, objectLifetime);
-            Debug.Log($"🚧 Спавн препятствия в ряду {lane} на позиции {spawnPos}");
+            else if (chance < 0.5f)
+            {
+                // 20% шанс — препятствие
+                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
+                Instantiate(obstaclePrefab, pos, Quaternion.identity);
+                Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
+            }
+            // 50% шанс — ничего не спавним
         }
     }
 
-    private char GetRandomLetter()
+    /// <summary>
+    /// Создает букву на указанной позиции
+    /// </summary>
+    private void SpawnLetter(Vector3 pos)
     {
-        string letters = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-        int index = rnd.Next(0, letters.Length);
-        return letters[index];
-    }
+        GameObject go = Instantiate(letterPrefab, pos, Quaternion.identity);
 
-    void Update()
-    {
-        for (int i = spawnedObjects.Count - 1; i >= 0; i--)
+        // Находим TMP-текст внутри префаба и задаем букву
+        TMP_Text txt = go.GetComponentInChildren<TMP_Text>();
+        char c = GetRandomRussianLetter();
+        txt.text = c.ToString();
+
+        // Записываем в сам компонент Letter
+        Letter letter = go.GetComponent<Letter>();
+        if (letter != null)
         {
-            if (spawnedObjects[i] == null)
-            {
-                spawnedObjects.RemoveAt(i);
-                continue;
-            }
-
-            if (spawnedObjects[i].transform.position.z < player.position.z - 10f)
-            {
-                Destroy(spawnedObjects[i]);
-                spawnedObjects.RemoveAt(i);
-            }
+            letter.letter = c;
         }
+
+        Debug.Log($"🔤 Спавн буквы '{c}' в позиции {pos}");
+    }
+
+    /// <summary>
+    /// Возвращает случайную букву из русского алфавита
+    /// </summary>
+    private char GetRandomRussianLetter()
+    {
+        const string alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+        return alphabet[Random.Range(0, alphabet.Length)];
     }
 }

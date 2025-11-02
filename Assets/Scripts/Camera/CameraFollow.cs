@@ -18,6 +18,6 @@ public class CameraFollow : MonoBehaviour
 
         transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);
 
-        transform.rotation = Quaternion.Euler(20f, 0f, 0f); 
+        //transform.rotation = Quaternion.Euler(20f, 0f, 0f); 
     }
 }

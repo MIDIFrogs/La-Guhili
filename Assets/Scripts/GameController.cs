@@ -1,48 +1,76 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
-    public WordManager wordManager;
+    [Header("References")]
     public ObjectSpawner spawner;
-    public FrogController player;
-    public LivesDisplayUI livesUI;
-    public WordDisplayUI wordUI;
-    [Header("Настройки")]
-    public float spawnInterval = 2f;
+    public TMP_Text scoreText;
+    public TMP_Text hpText;
+    public TMP_Text collectedText;
+    public TMP_Text usedWordsText;
 
-    private string currentTargetWord = "";
+    [Header("Settings")]
+    public int maxHP = 3;
+    public string wordsFilePath = "Assets/words.txt";
+
+    private WordManager wordManager;
     private string currentCollected = "";
-    [SerializeField] private int hp = 3;
+    private HashSet<string> usedWords = new HashSet<string>();
+    private int hp;
+    private int score;
+    private bool gameOver = false;
 
-    void Start()
+    private void Start()
     {
-        livesUI.InitHearts(hp);
-        StartNewWord();
+        hp = maxHP;
+        score = 0;
+
+        wordManager = new WordManager();
+        wordManager.LoadWords();
+
+        UpdateHP();
+        UpdateScore();
+        UpdateCollected();
+        UpdateUsedWords();
+
+        Debug.Log("🎮 Игра запущена. Словарь загружен, буквы будут спавниться.");
+
+        if (spawner != null)
+            StartCoroutine(spawner.StartSpawning());
+        else
+            Debug.LogWarning("⚠️ Не назначен ObjectSpawnerTMP!");
     }
 
-    void StartNewWord()
+    private void Update()
     {
-        currentTargetWord = wordManager.GetRandomWord();
-        currentCollected = "";
-        Debug.Log("🎯 Новое слово: " + currentTargetWord);
-        StartCoroutine(SpawnWordRoutine());
-    }
+        if (gameOver) return;
 
-    IEnumerator SpawnWordRoutine()
-    {
-        foreach (char letter in currentTargetWord)
+        // Проверяем нажатие пробела — подтверждение слова
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            int lane = Random.Range(0, 3);
-            spawner.SpawnLetter(letter, lane);
+            if (currentCollected.Length == 0) return;
 
-            // шум в других рядах
-            for (int i = 0; i < 3; i++)
+            if (wordManager.IsFullWord(currentCollected))
             {
-                if (i != lane && Random.value < 0.5f) spawner.SpawnNoise();
-            }
+                int gained = CalculateScore(currentCollected);
+                score += gained;
+                usedWords.Add(currentCollected);
 
-            yield return new WaitForSeconds(spawnInterval);
+                Debug.Log($"🏆 Собрано слово '{currentCollected}' (+{gained} очков)");
+                currentCollected = "";
+
+                UpdateUsedWords();
+                UpdateScore();
+                UpdateCollected();
+            }
+            else
+            {
+                LoseHP("❌ Слова не существует!");
+                currentCollected = "";
+                UpdateCollected();
+            }
         }
     }
 
@@ -51,61 +79,85 @@ public class GameController : MonoBehaviour
         char letter = letterObj.letter;
         currentCollected += char.ToUpper(letter);
 
-        Debug.Log($"🔡 Подобрана буква: {letter} (текущее слово: {currentCollected})");
+        Debug.Log($"🔠 Подобрана буква: {letter}, текущее слово: {currentCollected}");
 
-        wordUI.SetWord(currentCollected); // обновляем UI
-
-        // Проверка префикса: есть ли хотя бы одно слово, которое начинается с currentCollected
+        // Проверяем, есть ли слова с таким префиксом
         if (!wordManager.IsPossibleWord(currentCollected))
         {
-            LoseHP("невозможно продолжить слово");
+            LoseHP("⚠️ Префикс невозможен!");
             currentCollected = "";
-            Debug.Log("📝 Текущее слово сброшено, так как префикс невозможен");
         }
-        else
-        {
-            // Можно подсчитать очки за букву, если нужно
-            Debug.Log($"✅ Слово всё ещё возможно: {currentCollected}");
-        }
+
+        UpdateCollected();
     }
 
-
-    void Update()
+    public void OnObstacleHit()
     {
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            ConfirmWord();
-        }
+        LoseHP("💥 Столкновение с препятствием!");
     }
 
-    void ConfirmWord()
+    private void LoseHP(string reason)
     {
-        if (wordManager.IsExactWord(currentCollected))
-        {
-            Debug.Log("✅ Слово собрано! Очки начислены: " + currentCollected);
-            StopAllCoroutines();
-            StartNewWord();
-        }
-        else
-        {
-            LoseHP("неверное слово");
-            wordUI.Clear();
-            currentCollected = "";
-            StopAllCoroutines();
-            StartNewWord();
-        }
-    }
+        if (gameOver) return;
 
-    void LoseHP(string reason)
-    {
         hp--;
-        livesUI.SetLives(hp);
-        Debug.Log("❌ Потеря HP: " + reason + " (" + hp + "/3)");
+        Debug.Log($"{reason} Осталось ❤️ {hp}");
+
+        UpdateHP();
+
         if (hp <= 0)
         {
-            Debug.Log("💀 Игра окончена!");
-            StopAllCoroutines();
-            // Можно добавить логику конца игры здесь
+            Debug.Log("☠️ Игра окончена!");
+            gameOver = true;
+            hpText.text = "💀";
         }
+    }
+
+    private int CalculateScore(string word)
+    {
+        int sum = 0;
+        foreach (char c in word)
+        {
+            switch (c)
+            {
+                case 'Щ': sum += 10; break;
+                case 'Ф':
+                case 'Ъ':
+                case 'Ы':
+                case 'Э':
+                case 'Ю': sum += 3; break;
+                case 'Ж':
+                case 'Ш':
+                case 'Ч': sum += 2; break;
+                default: sum += 1; break;
+            }
+        }
+
+        if (word.Length >= 7) sum += 10;
+        else if (word.Length >= 5) sum += 5;
+
+        return sum;
+    }
+
+    private void UpdateHP()
+    {
+        string hearts = "";
+        for (int i = 0; i < hp; i++) hearts += "❤️";
+        hpText.text = hearts;
+    }
+
+    private void UpdateScore()
+    {
+        scoreText.text = score.ToString();
+    }
+
+    private void UpdateCollected()
+    {
+        collectedText.text = currentCollected;
+    }
+
+    private void UpdateUsedWords()
+    {
+        usedWordsText.text = string.Join("\n", usedWords);
     }
 }

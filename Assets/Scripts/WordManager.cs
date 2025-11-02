@@ -1,59 +1,68 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 public class WordManager : MonoBehaviour
 {
+    private TrieNode root;
+    private List<string> allWords = new List<string>();
+    private System.Random rnd = new System.Random();
 
-    void Start()
+    private void Awake()
     {
-        LoadWordsFromFile("Assets/words.txt");
+        LoadWords();
     }
 
-    private TrieNode root = new TrieNode();
-    private List<string> allWords = new List<string>();
-
-    public void LoadWordsFromFile(string path)
+    /// <summary>
+    /// Загружает слова из файла words.txt (в папке Resources)
+    /// </summary>
+    public void LoadWords()
     {
-        if (!File.Exists(path))
+        root = new TrieNode();
+
+        TextAsset textAsset = Resources.Load<TextAsset>("words");
+        if (textAsset == null)
         {
-            Debug.LogError("Words file not found: " + path);
+            Debug.LogError("❌ Не найден файл words.txt в папке Resources!");
             return;
         }
 
-        string[] lines = File.ReadAllLines(path);
+        string[] lines = textAsset.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines)
         {
             string word = line.Trim().ToUpper();
-            if (string.IsNullOrEmpty(word)) continue;
+            if (word.Length == 0) continue;
+
+            InsertWord(word);
             allWords.Add(word);
-            AddWordToTrie(word);
         }
 
-        Debug.Log("Loaded words: " + allWords.Count);
+        Debug.Log($"📚 Загружено {allWords.Count} слов");
     }
 
-    private void AddWordToTrie(string word)
+    /// <summary>
+    /// Вставка слова в префиксное дерево
+    /// </summary>
+    private void InsertWord(string word)
     {
         TrieNode node = root;
         foreach (char c in word)
         {
             if (!node.children.ContainsKey(c))
                 node.children[c] = new TrieNode();
+
             node = node.children[c];
         }
         node.isWord = true;
     }
 
-    public string GetRandomWord()
-    {
-        if (allWords.Count == 0) return null;
-        int index = Random.Range(0, allWords.Count);
-        return allWords[index];
-    }
-
+    /// <summary>
+    /// Проверяет, может ли текущее собрание букв быть началом хотя бы одного слова
+    /// </summary>
     public bool IsPossibleWord(string prefix)
     {
+        if (string.IsNullOrEmpty(prefix)) return true;
+
         TrieNode node = root;
         foreach (char c in prefix)
         {
@@ -61,11 +70,17 @@ public class WordManager : MonoBehaviour
                 return false;
             node = node.children[c];
         }
+
         return true;
     }
 
-    public bool IsExactWord(string word)
+    /// <summary>
+    /// Проверяет, существует ли слово целиком
+    /// </summary>
+    public bool IsFullWord(string word)
     {
+        if (string.IsNullOrEmpty(word)) return false;
+
         TrieNode node = root;
         foreach (char c in word)
         {
@@ -73,12 +88,36 @@ public class WordManager : MonoBehaviour
                 return false;
             node = node.children[c];
         }
+
         return node.isWord;
     }
-}
 
-public class TrieNode
-{
-    public Dictionary<char, TrieNode> children = new Dictionary<char, TrieNode>();
-    public bool isWord = false;
+    /// <summary>
+    /// Возвращает случайное слово из списка
+    /// </summary>
+    public string GetRandomWord()
+    {
+        if (allWords.Count == 0) return null;
+        return allWords[rnd.Next(allWords.Count)];
+    }
+
+    /// <summary>
+    /// Возвращает слово, которое начинается с данного префикса (если есть)
+    /// </summary>
+    public string GetWordStartingWith(string prefix)
+    {
+        foreach (string w in allWords)
+        {
+            if (w.StartsWith(prefix))
+                return w;
+        }
+        return null;
+    }
+
+    // Вложенный класс узла дерева
+    private class TrieNode
+    {
+        public Dictionary<char, TrieNode> children = new Dictionary<char, TrieNode>();
+        public bool isWord = false;
+    }
 }
