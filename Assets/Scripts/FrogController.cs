@@ -1,49 +1,59 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FrogController : MonoBehaviour
 {
-    public float laneDistance = 2f;
-    public float moveSpeed = 10f;
-    public SimpleWaterFlow riverFlow;
+    [Header("Движение")]
+    public float laneDistance = 2f;   // расстояние между рядами
+    public float laneSwitchSpeed = 8f;
+    public float forwardSpeed = 5f;
+    public float waterHeight = 0f;    // высота уровня воды
 
-    private int currentLane = 1;
-    private Vector3 targetPosition;
-    private Transform currentLilyPad;
-
-    void Start()
-    {
-        targetPosition = transform.position;
-    }
+    private int currentLane = 1; // 0 = left, 1 = center, 2 = right
 
     void Update()
     {
-        // ����� �����
-        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
-            MoveLane(-1);
-        if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
-            MoveLane(1);
-
-        Vector3 rowPosition = new Vector3((currentLane - 1) * laneDistance, transform.position.y, transform.position.z);
-        targetPosition = new Vector3(rowPosition.x, rowPosition.y, targetPosition.z);
-
-
-        targetPosition += new Vector3(0, 0, riverFlow.currentFlowSpeedZ * Time.deltaTime);
-
-        transform.position = Vector3.Lerp(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        HandleInput();
+        MoveForward();
+        KeepOnWaterLevel();
     }
 
-    void MoveLane(int direction)
+    private void HandleInput()
     {
-        currentLane += direction;
-        currentLane = Mathf.Clamp(currentLane, 0, 2);
+        if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+            currentLane = Mathf.Clamp(currentLane - 1, 0, 2);
+
+        if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+            currentLane = Mathf.Clamp(currentLane + 1, 0, 2);
+
+        float targetX = (currentLane - 1) * laneDistance;
+        float newX = Mathf.Lerp(transform.position.x, targetX, laneSwitchSpeed * Time.deltaTime);
+        transform.position = new Vector3(newX, transform.position.y, transform.position.z);
+    }
+
+    private void MoveForward()
+    {
+        transform.Translate(Vector3.forward * forwardSpeed * Time.deltaTime, Space.World);
+    }
+
+    private void KeepOnWaterLevel()
+    {
+        // удерживаем игрока на уровне воды
+        Vector3 pos = transform.position;
+        pos.y = waterHeight;
+        transform.position = pos;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("LilyPad"))
+        if (other.CompareTag("Letter"))
         {
-            currentLilyPad = other.transform;
-            targetPosition.y = currentLilyPad.position.y + 0.5f; 
+            Debug.Log("🐸 Лягушка подобрала букву: " + other.name);
+            Destroy(other.gameObject);
+        }
+        else if (other.CompareTag("Obstacle"))
+        {
+            Debug.Log("💥 Лягушка столкнулась с препятствием!");
+            Destroy(other.gameObject);
         }
     }
 }
