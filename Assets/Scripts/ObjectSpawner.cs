@@ -1,85 +1,102 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
 public class ObjectSpawner : MonoBehaviour
 {
-    [Header("Настройки спавна")]
+    [Header("РќР°СЃС‚СЂРѕР№РєРё СЃРїР°РІРЅР°")]
     public Transform player;
-    public float spawnDistance = 30f;   // как далеко спавн от игрока по Z
-    public float laneDistance = 2f;     // расстояние между рядами
-    public float waterHeight = 0f;      // высота уровня воды
+    public float spawnDistance = 30f;
+    public float laneDistance = 2f;
+    public float waterHeight = 0f;
     public float objectLifetime = 12f;
+    public float spawnCheckRadius = 0.5f; // СЂР°РґРёСѓСЃ РїСЂРѕРІРµСЂРєРё РїРµСЂРµСЃРµС‡РµРЅРёР№
 
-    [Header("Префабы")]
-    public GameObject letterPrefab3D;   // 3D TextMeshPro префаб для букв
+    [Header("РџСЂРµС„Р°Р±С‹")]
+    public GameObject letterPrefab3D;
     public GameObject obstaclePrefab;
 
     private List<GameObject> spawnedObjects = new List<GameObject>();
     private System.Random rnd = new System.Random();
 
     // ----------------------------------
-    // Вспомогательный метод: позиция ряда
     private Vector3 GetLanePosition(int laneIndex)
     {
-        float x = (laneIndex - 1) * laneDistance; // 0:center, -1:left, +1:right
+        float x = (laneIndex - 1) * laneDistance;
         float z = player.position.z + spawnDistance;
         return new Vector3(x, waterHeight, z);
     }
 
-    // ----------------------------------
-    // Спавн конкретной буквы в указанном ряду
+    private bool IsPositionFree(Vector3 position)
+    {
+        // РџСЂРѕРІРµСЂСЏРµРј С‚РѕР»СЊРєРѕ РЅР° Р±СѓРєРІС‹ Рё РїСЂРµРїСЏС‚СЃС‚РІРёСЏ
+        Collider[] hits = Physics.OverlapSphere(position, spawnCheckRadius);
+        foreach (var hit in hits)
+        {
+            // РРіРЅРѕСЂРёСЂСѓРµРј РёРіСЂРѕРєР°, Р·РµРјР»СЋ Рё РґСЂСѓРіРёРµ РЅРµРЅСѓР¶РЅС‹Рµ РєРѕР»Р»Р°Р№РґРµСЂС‹
+            if (hit.gameObject.CompareTag("Letter") || hit.gameObject.CompareTag("Obstacle"))
+                return false;
+        }
+        return true;
+    }
+
+
     public GameObject SpawnLetter(char letter, int laneIndex)
     {
         Vector3 spawnPos = GetLanePosition(laneIndex);
-        GameObject obj = Instantiate(letterPrefab3D, spawnPos, Quaternion.identity);
 
-        // Меняем текст TMP на нужную букву
+        // РџСЂРѕРІРµСЂРєР°, СЃРІРѕР±РѕРґРЅР° Р»Рё РїРѕР·РёС†РёСЏ
+        if (!IsPositionFree(spawnPos))
+        {
+            Debug.Log($"вљ пёЏ РЎРїР°РІРЅ Р±СѓРєРІС‹ {letter} РѕС‚РјРµРЅС‘РЅ: РјРµСЃС‚Рѕ Р·Р°РЅСЏС‚Рѕ");
+            return null;
+        }
+
+        GameObject obj = Instantiate(letterPrefab3D, spawnPos, Quaternion.identity);
         TMP_Text tmp = obj.GetComponent<TMP_Text>();
-        if (tmp != null)
-            tmp.text = letter.ToString();
+        if (tmp != null) tmp.text = letter.ToString();
 
         spawnedObjects.Add(obj);
-        Destroy(obj, objectLifetime); // удаление через время
+        Destroy(obj, objectLifetime);
+
+        Debug.Log($"рџ…°пёЏ РЎРїР°РІРЅ Р±СѓРєРІС‹ {letter} РІ СЂСЏРґСѓ {laneIndex} РЅР° РїРѕР·РёС†РёРё {spawnPos}");
         return obj;
     }
 
-    // ----------------------------------
-    // Спавн "шума" с вероятностью (рандомная буква или препятствие)
     public void SpawnNoise()
     {
         float chance = Random.value;
-        if (chance < 0.3f) // 30% буква
+        if (chance < 0.3f) // Р±СѓРєРІР°
         {
             int lane = rnd.Next(0, 3);
             char letter = GetRandomLetter();
             SpawnLetter(letter, lane);
         }
-        else if (chance < 0.5f) // 20% препятствие
+        else if (chance < 0.5f) // РїСЂРµРїСЏС‚СЃС‚РІРёРµ
         {
             int lane = rnd.Next(0, 3);
             Vector3 spawnPos = GetLanePosition(lane);
+            if (!IsPositionFree(spawnPos))
+            {
+                Debug.Log($"вљ пёЏ РЎРїР°РІРЅ РїСЂРµРїСЏС‚СЃС‚РІРёСЏ РѕС‚РјРµРЅС‘РЅ: РјРµСЃС‚Рѕ Р·Р°РЅСЏС‚Рѕ");
+                return;
+            }
             GameObject obj = Instantiate(obstaclePrefab, spawnPos, Quaternion.identity);
             spawnedObjects.Add(obj);
             Destroy(obj, objectLifetime);
+            Debug.Log($"рџљ§ РЎРїР°РІРЅ РїСЂРµРїСЏС‚СЃС‚РІРёСЏ РІ СЂСЏРґСѓ {lane} РЅР° РїРѕР·РёС†РёРё {spawnPos}");
         }
-        // 50% ничего не спавнится
     }
 
-    // ----------------------------------
-    // Получение случайной буквы (русская или латинская)
     private char GetRandomLetter()
     {
-        // Пример: русские буквы А-Я
-        string letters = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+        string letters = "РђР‘Р’Р“Р”Р•РЃР–Р—РР™РљР›РњРќРћРџР РЎРўРЈР¤РҐР¦Р§РЁР©РЄР«Р¬Р­Р®РЇ";
         int index = rnd.Next(0, letters.Length);
         return letters[index];
     }
 
-    // ----------------------------------
     void Update()
     {
-        // Удаление объектов, которые ушли за игрока
         for (int i = spawnedObjects.Count - 1; i >= 0; i--)
         {
             if (spawnedObjects[i] == null)

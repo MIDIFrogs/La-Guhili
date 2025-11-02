@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 3
   tags:
   - LilyPad
+  - letter
+  - Letter
+  - Obstacle
   layers:
   - Default
   - TransparentFX

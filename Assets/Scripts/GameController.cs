@@ -47,12 +47,13 @@ public class GameController : MonoBehaviour
     public void OnLetterCollected(char letter)
     {
         currentCollected += char.ToUpper(letter);
-        Debug.Log("🔡 Подобрана буква: " + letter + " (текущее: " + currentCollected + ")");
+        Debug.Log($"🔡 Подобрана буква: {letter} (текущее слово: {currentCollected})");
 
         if (!wordManager.IsPossibleWord(currentCollected))
         {
             LoseHP("невозможно продолжить слово");
             currentCollected = ""; // сброс буфера
+            Debug.Log($"📝 Текущее слово сброшено, так как префикс невозможен");
         }
     }
 
