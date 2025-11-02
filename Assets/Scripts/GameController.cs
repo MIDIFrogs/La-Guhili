@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -10,6 +12,8 @@ public class GameController : MonoBehaviour
     public TMP_Text hpText;
     public TMP_Text collectedText;
     public TMP_Text usedWordsText;
+
+    public Button againButton; //желательно потом разделить логику
 
     [Header("Settings")]
     public int maxHP = 3;
@@ -24,6 +28,10 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
+
+        againButton.gameObject.SetActive(false);
+        againButton.onClick.AddListener(RestartGame);
+
         hp = maxHP;
         score = 0;
 
@@ -50,6 +58,8 @@ public class GameController : MonoBehaviour
         // Проверяем нажатие пробела — подтверждение слова
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            Debug.Log("Space pressed");
+
             if (currentCollected.Length == 0) return;
 
             if (wordManager.IsFullWord(currentCollected))
@@ -101,7 +111,7 @@ public class GameController : MonoBehaviour
         if (gameOver) return;
 
         hp--;
-        Debug.Log($"{reason} Осталось ❤️ {hp}");
+        Debug.Log($"{reason} Осталось W {hp}");
 
         UpdateHP();
 
@@ -110,6 +120,9 @@ public class GameController : MonoBehaviour
             Debug.Log("☠️ Игра окончена!");
             gameOver = true;
             hpText.text = "💀";
+
+            againButton.gameObject.SetActive(true);
+            Time.timeScale = 0f;
         }
     }
 
@@ -160,4 +173,14 @@ public class GameController : MonoBehaviour
     {
         usedWordsText.text = string.Join("\n", usedWords);
     }
+
+
+
+    public void RestartGame() //кнопка
+    {
+        Time.timeScale = 1f; // Возвращаем время
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Перезагружаем текущую сцену
+    }
+
+
 }

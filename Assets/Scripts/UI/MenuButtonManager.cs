@@ -20,7 +20,7 @@ public class MenuButtonManager : MonoBehaviour
 
     private void OnPlayPressed()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("GameScene");
     }
 
 
