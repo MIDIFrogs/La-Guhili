@@ -7,7 +7,7 @@ public class GameController : MonoBehaviour
     public ObjectSpawner spawner;
     public FrogController player;
     public LivesDisplayUI livesUI;
-
+    public WordDisplayUI wordUI;
     [Header("Настройки")]
     public float spawnInterval = 2f;
 
@@ -49,9 +49,11 @@ public class GameController : MonoBehaviour
     public void OnLetterCollected(Letter letterObj)
     {
         char letter = letterObj.letter;
-
         currentCollected += char.ToUpper(letter);
+
         Debug.Log($"🔡 Подобрана буква: {letter} (текущее слово: {currentCollected})");
+
+        wordUI.SetWord(currentCollected); // обновляем UI
 
         // Проверка префикса: есть ли хотя бы одно слово, которое начинается с currentCollected
         if (!wordManager.IsPossibleWord(currentCollected))
@@ -87,6 +89,7 @@ public class GameController : MonoBehaviour
         else
         {
             LoseHP("неверное слово");
+            wordUI.Clear();
             currentCollected = "";
             StopAllCoroutines();
             StartNewWord();
