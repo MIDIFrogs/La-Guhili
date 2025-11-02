@@ -44,18 +44,27 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void OnLetterCollected(char letter)
+    public void OnLetterCollected(Letter letterObj)
     {
+        char letter = letterObj.letter;
+
         currentCollected += char.ToUpper(letter);
         Debug.Log($"🔡 Подобрана буква: {letter} (текущее слово: {currentCollected})");
 
+        // Проверка префикса: есть ли хотя бы одно слово, которое начинается с currentCollected
         if (!wordManager.IsPossibleWord(currentCollected))
         {
             LoseHP("невозможно продолжить слово");
-            currentCollected = ""; // сброс буфера
-            Debug.Log($"📝 Текущее слово сброшено, так как префикс невозможен");
+            currentCollected = "";
+            Debug.Log("📝 Текущее слово сброшено, так как префикс невозможен");
+        }
+        else
+        {
+            // Можно подсчитать очки за букву, если нужно
+            Debug.Log($"✅ Слово всё ещё возможно: {currentCollected}");
         }
     }
+
 
     void Update()
     {
