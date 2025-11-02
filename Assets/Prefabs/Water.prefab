@@ -122,8 +122,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4193a51285c11904a989350fee93f969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scrollSpeedX: 0.1
-  scrollSpeedY: 0.05
+  scrollSpeedX: 0
+  scrollSpeedY: 0.1
   acceleration: 0.01
   currentFlowSpeedZ: 0.1
   textureName: _BaseMap
