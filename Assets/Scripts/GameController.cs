@@ -6,16 +6,18 @@ public class GameController : MonoBehaviour
     public WordManager wordManager;
     public ObjectSpawner spawner;
     public FrogController player;
+    public LivesDisplayUI livesUI;
 
     [Header("Настройки")]
     public float spawnInterval = 2f;
 
     private string currentTargetWord = "";
     private string currentCollected = "";
-    private int hp = 3;
+    [SerializeField] private int hp = 3;
 
     void Start()
     {
+        livesUI.InitHearts(hp);
         StartNewWord();
     }
 
@@ -94,6 +96,7 @@ public class GameController : MonoBehaviour
     void LoseHP(string reason)
     {
         hp--;
+        livesUI.SetLives(hp);
         Debug.Log("❌ Потеря HP: " + reason + " (" + hp + "/3)");
         if (hp <= 0)
         {
