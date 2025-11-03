@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8932529560113251168}
   - component: {fileID: 8568332351449064999}
   - component: {fileID: 2585373027229249805}
+  - component: {fileID: 7239354652922923331}
   m_Layer: 0
   m_Name: LilyPad
   m_TagString: Obstacle
@@ -108,3 +109,15 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7239354652922923331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6930530623725435699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99c31bdcc8c5b8b44a9fa8b39fb9032f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

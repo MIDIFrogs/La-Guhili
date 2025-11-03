@@ -120,7 +120,7 @@ public class GameController : MonoBehaviour
 
     public void OnObstacleHit()
     {
-        LoseHP("💥 Столкновение с препятствием!");
+        LoseHP("💥 Столкновение с препятствием!" + gameOver);
     }
 
     private void LoseHP(string reason)

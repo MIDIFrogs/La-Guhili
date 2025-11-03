@@ -14,6 +14,7 @@ public class FrogController : MonoBehaviour
     [Header("Анимация")]
     [SerializeField] private Animator animator;
 
+    public GameController gc;
 
     private int currentLane = 1; // 0 = left, 1 = center, 2 = right
 
@@ -76,6 +77,7 @@ public class FrogController : MonoBehaviour
         else if (other.CompareTag("Obstacle"))
         {
             Debug.Log("💥 Лягушка столкнулась с препятствием!");
+            gc.OnObstacleHit();
             Destroy(other.gameObject);
         }
     }

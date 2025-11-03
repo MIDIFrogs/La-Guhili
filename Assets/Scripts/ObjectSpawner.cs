@@ -78,13 +78,13 @@ public class ObjectSpawner : MonoBehaviour
         {
             float chance = Random.value;
 
-            if (chance < 0.3f)
+            if (chance < 0.5f)
             {
                 // 30% шанс — буква
                 Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
                 SpawnLetter(pos);
             }
-            else if (chance < 0.5f)
+            else if (chance < 0.7f)
             {
                 // 20% шанс — препятствие
                 Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
