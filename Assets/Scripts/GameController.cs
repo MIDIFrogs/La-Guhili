@@ -6,7 +6,7 @@ public class GameController : MonoBehaviour
 {
     public static GameController Instance;
 
-    [Header("Игрок")]
+    [Header("Player")]
     public Transform player;
     public int maxHP = 3;
     private int currentHP;

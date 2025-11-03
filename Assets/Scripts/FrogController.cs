@@ -3,12 +3,27 @@
 public class FrogController : MonoBehaviour
 {
     [Header("Движение")]
-    public float laneDistance = 2f;   // расстояние между рядами
-    public float laneSwitchSpeed = 8f;
-    public float forwardSpeed = 5f;
-    public float waterHeight = 0f;    // высота уровня воды
+    [SerializeField] private float laneDistance = 2f;   // расстояние между рядами
+    [SerializeField] private float laneSwitchSpeed = 8f;
+    [SerializeField] private float forwardSpeed = 5f;
+    [SerializeField] private float waterHeight = 0f;    // высота уровня воды
+
+    [Header("Звук")]
+    [SerializeField] private AudioManager sound;
+
+    [Header("Анимация")]
+    [SerializeField] private Animator animator;
+
 
     private int currentLane = 1; // 0 = left, 1 = center, 2 = right
+
+
+
+    private void Start()
+    {
+        animator.Play("Idle");
+    }
+
 
     void Update()
     {
@@ -20,10 +35,18 @@ public class FrogController : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
+        {
             currentLane = Mathf.Clamp(currentLane - 1, 0, 2);
+            sound.PlaySwoosh();
+            animator.Play("LeftSlide", 0, 0f);
+        }
 
         if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
+        {
             currentLane = Mathf.Clamp(currentLane + 1, 0, 2);
+            sound.PlaySwoosh();
+            animator.Play("RightSlide", 0, 0f);
+        }
 
         float targetX = (currentLane - 1) * laneDistance;
         float newX = Mathf.Lerp(transform.position.x, targetX, laneSwitchSpeed * Time.deltaTime);
