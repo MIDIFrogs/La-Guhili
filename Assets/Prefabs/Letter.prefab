@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 5582178680515089703, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
+  - {fileID: -4453064855747083228, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -108,14 +108,14 @@ MonoBehaviour:
   m_text: "\u0410"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
-  m_sharedMaterial: {fileID: 5582178680515089703, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
+  m_sharedMaterial: {fileID: -4453064855747083228, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278508799
-  m_fontColor: {r: 1, g: 0.86361253, b: 0.0141509175, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -214,6 +214,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   letter: 0
   isTargetLetter: 0
+  textMeshPro: {fileID: 802691376199250212}
 --- !u!1 &7135691732877594680
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
 public class WordManager : MonoBehaviour
 {
-    [Header("Словарь")]
-    public TextAsset dictionaryFile;
+    private TrieNode root;
+    private HashSet<string> allWords = new HashSet<string>();
+    private System.Random rnd = new System.Random();
 
-    [Header("Частотность букв (русские)")]
     public Dictionary<char, float> letterWeights = new Dictionary<char, float>
     {
         {'а',0.062f},{'б',0.014f},{'в',0.045f},{'г',0.017f},{'д',0.025f},{'е',0.072f},
@@ -19,71 +19,109 @@ public class WordManager : MonoBehaviour
         {'э',0.003f},{'ю',0.006f},{'я',0.021f}
     };
 
-    private HashSet<string> words = new HashSet<string>(); 
-    private TrieNode root = new TrieNode(); 
-
-
-    private class TrieNode
+    private void Awake()
     {
-        public Dictionary<char, TrieNode> children = new Dictionary<char, TrieNode>();
-        public bool isWord = false;
+        LoadWords();
     }
-
 
     public void LoadWords()
     {
-        if (dictionaryFile == null)
+        root = new TrieNode();
+
+        TextAsset textAsset = Resources.Load<TextAsset>("words");
+        if (textAsset == null)
         {
-            Debug.LogError("WordManager: словарь не назначен!");
+            Debug.LogError("❌ Не найден файл words.txt в папке Resources!");
             return;
         }
 
-        string[] lines = dictionaryFile.text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        int count = 0;
+        string[] lines = textAsset.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
         foreach (string line in lines)
         {
-            string w = line.Trim().ToLower();
-            if (string.IsNullOrEmpty(w)) continue;
-            words.Add(w);
-            AddWordToTrie(w);
-            count++;
+            string word = line.Trim().ToUpper();
+            if (word.Length == 0) continue;
+
+            InsertWord(word);
+            allWords.Add(word);
         }
-        Debug.Log($"WordManager: загружено {count} слов, построено дерево префиксов.");
+
+        Debug.Log($"📚 Загружено {allWords.Count} слов");
     }
 
-    private void AddWordToTrie(string word)
+    /// <summary>
+    /// Вставка слова в префиксное дерево
+    /// </summary>
+    private void InsertWord(string word)
     {
         TrieNode node = root;
         foreach (char c in word)
         {
-            if (!node.children.ContainsKey(c)) node.children[c] = new TrieNode();
+            if (!node.children.ContainsKey(c))
+                node.children[c] = new TrieNode();
+
             node = node.children[c];
         }
         node.isWord = true;
     }
 
-    public bool IsWord(string word)
+    /// <summary>
+    /// Проверяет, может ли текущее собрание букв быть началом хотя бы одного слова
+    /// </summary>
+    public bool IsPossibleWord(string prefix)
     {
-        word = word.ToLower();
-        TrieNode node = root;
-        foreach (char c in word)
-        {
-            if (!node.children.ContainsKey(c)) return false;
-            node = node.children[c];
-        }
-        return node.isWord;
-    }
+        if (string.IsNullOrEmpty(prefix)) return true;
 
-    public bool IsPossiblePrefix(string prefix)
-    {
-        prefix = prefix.ToLower();
         TrieNode node = root;
         foreach (char c in prefix)
         {
-            if (!node.children.ContainsKey(c)) return false;
+            if (!node.children.ContainsKey(c))
+                return false;
             node = node.children[c];
         }
+
         return true;
+    }
+
+    /// <summary>
+    /// Проверяет, существует ли слово целиком
+    /// </summary>
+    public bool IsFullWord(string word)
+    {
+        if (string.IsNullOrEmpty(word)) return false;
+
+        TrieNode node = root;
+        foreach (char c in word)
+        {
+            if (!node.children.ContainsKey(c))
+                return false;
+            node = node.children[c];
+        }
+
+        return node.isWord;
+    }
+    /// <summary>
+    /// Возвращает слово, которое начинается с данного префикса (если есть)
+    /// </summary>
+    public string GetWordStartingWith(string prefix)
+    {
+        foreach (string w in allWords)
+        {
+            if (w.StartsWith(prefix))
+                return w;
+        }
+        return null;
+    }
+
+    public bool isChildInPrefix(string prefix, char letter)
+    {
+        TrieNode node = root;
+        foreach (char c in prefix)
+        {
+            if (!node.children.ContainsKey(c))
+                return false;
+            node = node.children[c];
+        }
+        return node.children.ContainsKey(letter);
     }
 
     public char GetNextLetter(string prefix)
@@ -116,26 +154,10 @@ public class WordManager : MonoBehaviour
         return 'а';
     }
 
-    public string FindReachableWord(string currentCollected, List<char> availableLetters)
+    // Вложенный класс узла дерева
+    private class TrieNode
     {
-        currentCollected = currentCollected.ToLower();
-        List<char> pool = new List<char>(availableLetters);
-        pool.AddRange(currentCollected);
-
-        List<string> candidates = words.Where(w => {
-            var temp = new List<char>(pool);
-            foreach (char c in w)
-            {
-                if (temp.Contains(c)) temp.Remove(c);
-                else return false;
-            }
-            return true;
-        }).ToList();
-
-        if (candidates.Count == 0) return null;
-
-        string chosen = candidates[UnityEngine.Random.Range(0, candidates.Count)];
-        Debug.Log($"WordManager: найдено достижимое слово для прозрения -> {chosen}");
-        return chosen;
+        public Dictionary<char, TrieNode> children = new Dictionary<char, TrieNode>();
+        public bool isWord = false;
     }
 }

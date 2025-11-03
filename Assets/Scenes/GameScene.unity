@@ -282,22 +282,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81f5ac9ffc0f0a5428907977994a9fbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 417875108}
   letterPrefab: {fileID: 3059376167063593584, guid: c846bb5e847fbd943af0afd0710f5b13, type: 3}
   obstaclePrefab: {fileID: 6930530623725435699, guid: c9ff06ee45747b442a1c654d1688b764, type: 3}
-  leftX: -3
-  centerX: 0
-  rightX: 3
+  player: {fileID: 417875108}
   spawnDistance: 20
-  spawnOffsetY: 0.5
-  spawnRandomOffset: 5
-  despawnDistance: 5
-  minSpawnInterval: 2
-  maxSpawnInterval: 3
-  spawnChance: 0.5
-  letterChance: 0.65
-  obstacleChance: 0.35
-  wordManager: {fileID: 777860895}
+  spawnInterval: 2
+  rowOffset: 3.5
+  maxObjectsPerRow: 3
 --- !u!4 &208327026
 Transform:
   m_ObjectHideFlags: 0
@@ -447,8 +438,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u2764\uFE0F"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2976d5e94eab8244892860f399703e6a, type: 2}
+  m_sharedMaterial: {fileID: -333248401290414823, guid: 2976d5e94eab8244892860f399703e6a, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1588,7 +1579,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1573dfa65b8a9054aa82efcbac14e24c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dictionaryFile: {fileID: 4900000, guid: 74b3fcc5d90ec4543b6006711035f7e8, type: 3}
 --- !u!4 &777860896
 Transform:
   m_ObjectHideFlags: 0
@@ -1671,8 +1661,8 @@ MonoBehaviour:
 
     ___________'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
-  m_sharedMaterial: {fileID: 5582178680515089703, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
+  m_fontAsset: {fileID: 0}
+  m_sharedMaterial: {fileID: 0}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1926,10 +1916,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: _____________
+  m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
-  m_sharedMaterial: {fileID: 5582178680515089703, guid: ed8c3e6cd6e29a448a981d4770908546, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2976d5e94eab8244892860f399703e6a, type: 2}
+  m_sharedMaterial: {fileID: -333248401290414823, guid: 2976d5e94eab8244892860f399703e6a, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3064,19 +3054,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe5384e5f47fd9444878ff9f1dc84abe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 417875108}
-  maxHP: 3
-  hpText: {fileID: 266777667}
-  scoreText: {fileID: 1940111503}
-  collectedLettersText: {fileID: 587134502}
-  usedWordsText: {fileID: 787150035}
-  startOverButton: {fileID: 1376291139}
-  wordManager: {fileID: 777860895}
   spawner: {fileID: 208327025}
-  insightMax: 25
-  insightCharge: 0
-  insightBarFront: {fileID: 266764721}
-  insightPanelKnob: {fileID: 1701654180}
+  scoreText: {fileID: 1940111503}
+  hpText: {fileID: 266777667}
+  collectedText: {fileID: 587134502}
+  usedWordsText: {fileID: 787150035}
+  againButton: {fileID: 1376291141}
+  maxHP: 3
+  wordsFilePath: Assets/words.txt
 --- !u!4 &1644134668
 Transform:
   m_ObjectHideFlags: 0

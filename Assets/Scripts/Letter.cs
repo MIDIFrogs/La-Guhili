@@ -1,36 +1,35 @@
+using TMPro;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class Letter : MonoBehaviour
 {
-    private char currentChar;
-    private TextMesh text;
-
-    private void Awake()
-    {
-        text = GetComponentInChildren<TextMesh>();
-    }
-
-    public void SetLetter(char c)
-    {
-        currentChar = c;
-        if (text != null) text.text = c.ToString();
-    }
-
-    public char GetChar() => currentChar;
-
-    public void Highlight(bool on)
-    {
-        var r = GetComponentInChildren<MeshRenderer>();
-        if (r != null) r.material.color = on ? Color.yellow : Color.white;
-    }
+    public char letter;
+    public bool isTargetLetter = false;
+    public TMP_Text textMeshPro;
 
     private void OnTriggerEnter(Collider other)
     {
-        var gc = other.GetComponent<GameController>();
+        if (!other.CompareTag("Player")) return;
+
+        GameController gc = FindObjectOfType<GameController>();
         if (gc != null)
         {
-            gc.OnLetterCollected(currentChar);
-            Destroy(gameObject);
+            gc.OnLetterCollected(this); // передаём сам объект буквы
         }
+
+        Destroy(gameObject);
+    }
+
+    public void LightOn()
+    {
+        textMeshPro.color = Color.yellow;
+        Debug.Log("highlight on" + " " + letter);
+    }
+
+    public void LightOff() 
+    { 
+        textMeshPro.color = Color.white;
+        Debug.Log("highlight off" + " " + letter);
     }
 }
