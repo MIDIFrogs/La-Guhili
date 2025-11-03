@@ -1,186 +1,199 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
-    [Header("References")]
-    public ObjectSpawner spawner;
-    public TMP_Text scoreText;
-    public TMP_Text hpText;
-    public TMP_Text collectedText;
-    public TMP_Text usedWordsText;
+    public static GameController Instance;
 
-    public Button againButton; //желательно потом разделить логику
-
-    [Header("Settings")]
+    [Header("Игрок")]
+    public Transform player;
     public int maxHP = 3;
-    public string wordsFilePath = "Assets/words.txt";
+    private int currentHP;
 
-    private WordManager wordManager;
+    [Header("UI")]
+    public TextMeshProUGUI hpText;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI collectedLettersText;
+    public TextMeshProUGUI usedWordsText;
+    public GameObject startOverButton;
+
+    [Header("Word System")]
+    public WordManager wordManager;
+    public ObjectSpawner spawner;
+
+    [Header("Insight")]
+    public float insightMax = 25f;
+    public float insightCharge = 0f;
+    public GameObject insightBarFront; 
+    public GameObject insightPanelKnob; 
+
     private string currentCollected = "";
-    private HashSet<string> usedWords = new HashSet<string>();
-    private int hp;
-    private int score;
-    private bool gameOver = false;
+    private List<string> usedWords = new List<string>();
+    private int score = 0;
 
-    private void Start()
+    private void Awake()
     {
-
-        againButton.gameObject.SetActive(false);
-        againButton.onClick.AddListener(RestartGame);
-
-        hp = maxHP;
-        score = 0;
-
-        wordManager = new WordManager();
+        Instance = this;
+        currentHP = maxHP;
+        UpdateHPUI();
+        UpdateScoreUI();
+        UpdateCollectedLettersUI();
+        UpdateUsedWordsUI();
+        startOverButton.SetActive(false);
         wordManager.LoadWords();
-
-        UpdateHP();
-        UpdateScore();
-        UpdateCollected();
-        UpdateUsedWords();
-
-        Debug.Log("🎮 Игра запущена. Словарь загружен, буквы будут спавниться.");
-
-        if (spawner != null)
-            StartCoroutine(spawner.StartSpawning());
-        else
-            Debug.LogWarning("⚠️ Не назначен ObjectSpawnerTMP!");
     }
 
     private void Update()
     {
-        if (gameOver) return;
+        if (insightCharge < insightMax) insightCharge += Time.deltaTime;
+        UpdateInsightUI();
 
-        // Проверяем нажатие пробела — подтверждение слова
+        if (Input.GetKeyDown(KeyCode.F) && insightCharge >= insightMax)
+        {
+            ActivateInsight();
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("Space pressed");
-
-            if (currentCollected.Length == 0) return;
-
-            if (wordManager.IsFullWord(currentCollected))
-            {
-                int gained = CalculateScore(currentCollected);
-                score += gained;
-                usedWords.Add(currentCollected);
-
-                Debug.Log($"🏆 Собрано слово '{currentCollected}' (+{gained} очков)");
-                currentCollected = "";
-
-                UpdateUsedWords();
-                UpdateScore();
-                UpdateCollected();
-            }
-            else
-            {
-                LoseHP("❌ Слова не существует!");
-                currentCollected = "";
-                UpdateCollected();
-            }
+            if (currentCollected.Length > 0) ConfirmCurrentWord();
         }
     }
 
-    public void OnLetterCollected(Letter letterObj)
+    public void OnLetterCollected(char letter)
     {
-        char letter = letterObj.letter;
-        currentCollected += char.ToUpper(letter);
+        currentCollected += letter;
+        UpdateCollectedLettersUI();
 
-        Debug.Log($"🔠 Подобрана буква: {letter}, текущее слово: {currentCollected}");
-
-        // Проверяем, есть ли слова с таким префиксом
-        if (!wordManager.IsPossibleWord(currentCollected))
+        if (!wordManager.IsPossiblePrefix(currentCollected))
         {
-            LoseHP("⚠️ Префикс невозможен!");
+            Debug.Log($"Неверный префикс: {currentCollected}. Минус 1 HP.");
+            LoseHP(1);
             currentCollected = "";
+            UpdateCollectedLettersUI();
         }
-
-        UpdateCollected();
+        else
+        {
+            Debug.Log($"Собран префикс: {currentCollected}");
+        }
     }
 
     public void OnObstacleHit()
     {
-        LoseHP("💥 Столкновение с препятствием!");
+        Debug.Log("Игрок столкнулся с препятствием. Минус 1 HP.");
+        LoseHP(1);
     }
 
-    private void LoseHP(string reason)
+    private void ConfirmCurrentWord()
     {
-        if (gameOver) return;
-
-        hp--;
-        Debug.Log($"{reason} Осталось W {hp}");
-
-        UpdateHP();
-
-        if (hp <= 0)
+        string collected = currentCollected.ToLower();
+        if (wordManager.IsWord(collected))
         {
-            Debug.Log("☠️ Игра окончена!");
-            gameOver = true;
-            hpText.text = "💀";
-
-            againButton.gameObject.SetActive(true);
-            Time.timeScale = 0f;
+            if (!usedWords.Contains(collected)) usedWords.Add(collected);
+            int points = CalculatePoints(collected);
+            score += points;
+            Debug.Log($"Подтверждено слово '{collected}', получено {points} очков.");
+            UpdateScoreUI();
+            UpdateUsedWordsUI();
         }
+        else
+        {
+            Debug.Log($"Неверное слово '{collected}'. Минус 1 HP.");
+            LoseHP(1);
+        }
+        currentCollected = "";
+        UpdateCollectedLettersUI();
     }
 
-    private int CalculateScore(string word)
+    private int CalculatePoints(string word)
     {
-        int sum = 0;
+        int points = 0;
         foreach (char c in word)
         {
-            switch (c)
+            if (wordManager.letterWeights.TryGetValue(c, out float w))
             {
-                case 'Щ': sum += 10; break;
-                case 'Ф':
-                case 'Ъ':
-                case 'Ы':
-                case 'Э':
-                case 'Ю': sum += 3; break;
-                case 'Ж':
-                case 'Ш':
-                case 'Ч': sum += 2; break;
-                default: sum += 1; break;
+                if (w >= 0.04f) points += 1; // часто
+                else if (w >= 0.01f) points += 2; // средние
+                else points += 3; // редкие
             }
         }
 
-        if (word.Length >= 7) sum += 10;
-        else if (word.Length >= 5) sum += 5;
-
-        return sum;
+        if (word.Length >= 3 && word.Length <= 4) points += 5;
+        else if (word.Length >= 5 && word.Length <= 6) points += 7;
+        else if (word.Length >= 7) points += 10;
+        return points;
     }
 
-    private void UpdateHP()
+    private void LoseHP(int amount)
     {
+        currentHP -= amount;
+        UpdateHPUI();
+        if (currentHP <= 0) GameOver();
+    }
+
+    private void GameOver()
+    {
+        Debug.Log("Игра окончена.");
+        startOverButton.SetActive(true);
+        Time.timeScale = 0f; // пауза
+        int best = PlayerPrefs.GetInt("BestScore", 0);
+        if (score > best) PlayerPrefs.SetInt("BestScore", score);
+    }
+
+    public void StartOver()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private void UpdateHPUI()
+    {
+        if (hpText == null) return;
         string hearts = "";
-        for (int i = 0; i < hp; i++) hearts += "❤️";
+        for (int i = 0; i < currentHP; i++) hearts += "❤️";
         hpText.text = hearts;
     }
 
-    private void UpdateScore()
+    private void UpdateScoreUI()
     {
-        scoreText.text = score.ToString();
+        if (scoreText != null) scoreText.text = score.ToString();
     }
 
-    private void UpdateCollected()
+    private void UpdateCollectedLettersUI()
     {
-        collectedText.text = currentCollected;
+        if (collectedLettersText != null) collectedLettersText.text = currentCollected;
     }
 
-    private void UpdateUsedWords()
+    private void UpdateUsedWordsUI()
     {
-        usedWordsText.text = string.Join("\n", usedWords);
+        if (usedWordsText != null) usedWordsText.text = string.Join("\n", usedWords);
     }
 
-
-
-    public void RestartGame() //кнопка
+    private void UpdateInsightUI()
     {
-        Time.timeScale = 1f; // Возвращаем время
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Перезагружаем текущую сцену
+        if (insightBarFront != null)
+        {
+            float scaleX = Mathf.Clamp01(insightCharge / insightMax);
+            insightBarFront.transform.localScale = new Vector3(scaleX, 1f, 1f);
+        }
+        if (insightPanelKnob != null)
+        {
+            if (insightCharge >= insightMax) insightPanelKnob.SetActive(true);
+            else insightPanelKnob.SetActive(false);
+        }
     }
 
+    private void ActivateInsight()
+    {
+        List<char> visible = spawner.GetVisibleLetters();
+        string reachable = wordManager.FindReachableWord(currentCollected, visible);
+        if (reachable != null) spawner.HighlightLettersForWord(reachable);
+        Debug.Log($"Прозрение активировано! Цель: {reachable}");
+        insightCharge = 0f;
+    }
 
+    public string GetCurrentPrefix()
+    {
+        return currentCollected;
+    }
 }

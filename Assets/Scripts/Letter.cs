@@ -1,21 +1,36 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 public class Letter : MonoBehaviour
 {
-    public char letter;
-    public bool isTargetLetter = false;
+    private char currentChar;
+    private TextMesh text;
+
+    private void Awake()
+    {
+        text = GetComponentInChildren<TextMesh>();
+    }
+
+    public void SetLetter(char c)
+    {
+        currentChar = c;
+        if (text != null) text.text = c.ToString();
+    }
+
+    public char GetChar() => currentChar;
+
+    public void Highlight(bool on)
+    {
+        var r = GetComponentInChildren<MeshRenderer>();
+        if (r != null) r.material.color = on ? Color.yellow : Color.white;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
-
-        GameController gc = FindObjectOfType<GameController>();
+        var gc = other.GetComponent<GameController>();
         if (gc != null)
         {
-            gc.OnLetterCollected(this); // передаём сам объект буквы
+            gc.OnLetterCollected(currentChar);
+            Destroy(gameObject);
         }
-
-        Destroy(gameObject);
     }
 }

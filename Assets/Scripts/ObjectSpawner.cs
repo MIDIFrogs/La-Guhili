@@ -1,97 +1,178 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
 public class ObjectSpawner : MonoBehaviour
 {
-    [Header("References")]
-    public GameObject letterPrefab;     // Префаб с TMP_Text и компонентом Letter
-    public GameObject obstaclePrefab;   // Префаб препятствия
-    public Transform player;            // Ссылка на игрока
+    [Header("Игрок")]
+    public Transform player;
 
-    [Header("Spawn Settings")]
-    public float spawnDistance = 25f;   // На каком расстоянии впереди игрока спавнится объект
-    public float spawnInterval = 2f;    // Интервал между спавнами
-    public float rowOffset = 3.5f;      // Расстояние между рядами (по оси X)
-    public int maxObjectsPerRow = 3;    // Чтобы не было наложений
+    [Header("Префабы")]
+    public GameObject letterPrefab;
+    public GameObject obstaclePrefab;
 
-    private float[] rows;               // Координаты рядов по X
-    private GameController gc;
+    [Header("Ряды по X")]
+    public float leftX = -3f;
+    public float centerX = 0f;
+    public float rightX = 3f;
+
+    [Header("Настройки спавна")]
+    public float spawnDistance = 20f;
+    public float spawnOffsetY = 0.5f;
+    public float spawnRandomOffset = 5f;
+    public float despawnDistance = 5f;
+    public float minSpawnInterval = 2f;
+    public float maxSpawnInterval = 3f;
+
+    [Header("Вероятности")]
+    [Range(0f, 1f)] public float spawnChance = 0.5f;
+    [Range(0f, 1f)] public float letterChance = 0.65f;
+    [Range(0f, 1f)] public float obstacleChance = 0.35f;
+
+    [Header("WordManager")]
+    public WordManager wordManager;
+
+    private Dictionary<int, Stack<GameObject>> rowStacks = new Dictionary<int, Stack<GameObject>>();
+    private Dictionary<int, float> lastSpawnTime = new Dictionary<int, float>();
+    private List<GameObject> spawnedObjects = new List<GameObject>();
 
     private void Start()
     {
-        rows = new float[] { -rowOffset, 0, rowOffset };
-        gc = FindObjectOfType<GameController>();
+        rowStacks[0] = new Stack<GameObject>();
+        rowStacks[1] = new Stack<GameObject>();
+        rowStacks[2] = new Stack<GameObject>();
+
+        lastSpawnTime[0] = Time.time;
+        lastSpawnTime[1] = Time.time;
+        lastSpawnTime[2] = Time.time;
+
+        StartCoroutine(SpawnRoutine());
     }
 
-    /// <summary>
-    /// Запускает бесконечный цикл спавна объектов
-    /// </summary>
-    public IEnumerator StartSpawning()
+    private void Update()
     {
-        Debug.Log("🌱 Начинаем спавн объектов...");
+        // Дестрой объектов, которые остались позади игрока
+        for (int j = spawnedObjects.Count - 1; j >= 0; j--)
+        {
+            if (spawnedObjects[j] == null)
+            {
+                spawnedObjects.RemoveAt(j);
+                continue;
+            }
 
+            if (player.position.z - spawnedObjects[j].transform.position.z > despawnDistance)
+            {
+                Destroy(spawnedObjects[j]);
+                spawnedObjects.RemoveAt(j);
+            }
+        }
+    }
+
+    private IEnumerator SpawnRoutine()
+    {
         while (true)
         {
-            TrySpawnObjectsBatch();
-            yield return new WaitForSeconds(spawnInterval);
-        }
-    }
-
-    /// <summary>
-    /// Один цикл спавна: проверяет все ряды и спавнит объекты с шансом
-    /// </summary>
-    private void TrySpawnObjectsBatch()
-    {
-        foreach (float rowX in rows)
-        {
-            float chance = Random.value;
-
-            if (chance < 0.3f)
+            for (int row = 0; row < 3; row++)
             {
-                // 30% шанс — буква
-                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
-                SpawnLetter(pos);
+                if (Time.time - lastSpawnTime[row] >= Random.Range(minSpawnInterval, maxSpawnInterval))
+                {
+                    TrySpawn(row);
+                    lastSpawnTime[row] = Time.time;
+                }
             }
-            else if (chance < 0.5f)
-            {
-                // 20% шанс — препятствие
-                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
-                Instantiate(obstaclePrefab, pos, Quaternion.identity);
-                Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
-            }
-            // 50% шанс — ничего не спавним
+            yield return null;
         }
     }
 
-    /// <summary>
-    /// Создает букву на указанной позиции
-    /// </summary>
-    private void SpawnLetter(Vector3 pos)
+    private void TrySpawn(int row)
     {
-        GameObject go = Instantiate(letterPrefab, pos, Quaternion.identity);
+        if (Random.value > spawnChance) return;
 
-        // Находим TMP-текст внутри префаба и задаем букву
-        TMP_Text txt = go.GetComponentInChildren<TMP_Text>();
-        char c = GetRandomRussianLetter();
-        txt.text = c.ToString();
+        GameObject prefabToSpawn = null;
+        char letterChar = ' ';
 
-        // Записываем в сам компонент Letter
-        Letter letter = go.GetComponent<Letter>();
-        if (letter != null)
+        float r = Random.value;
+        if (r < letterChance)
         {
-            letter.letter = c;
+            prefabToSpawn = letterPrefab;
+            letterChar = PickLetterForSpawn();
+        }
+        else if (r < letterChance + obstacleChance)
+        {
+            prefabToSpawn = obstaclePrefab;
+        }
+        else return;
+
+        Vector3 pos = GetSpawnPosition(row);
+
+        GameObject obj = Instantiate(prefabToSpawn, pos, Quaternion.identity);
+        spawnedObjects.Add(obj);
+        rowStacks[row].Push(obj);
+
+        if (prefabToSpawn == letterPrefab)
+        {
+            TextMeshPro tmp = obj.GetComponentInChildren<TextMeshPro>();
+            if (tmp != null)
+            {
+                tmp.text = letterChar.ToString();
+                tmp.color = Color.white;
+            }
         }
 
-        Debug.Log($"🔤 Спавн буквы '{c}' в позиции {pos}");
+        Debug.Log($"Спавн {prefabToSpawn.name} в ряду {row} на позиции {pos}. Буква: {letterChar}");
     }
 
-    /// <summary>
-    /// Возвращает случайную букву из русского алфавита
-    /// </summary>
-    private char GetRandomRussianLetter()
+    private Vector3 GetSpawnPosition(int row)
     {
-        const string alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-        return alphabet[Random.Range(0, alphabet.Length)];
+        float x = centerX;
+        if (row == 0) x = leftX;
+        else if (row == 2) x = rightX;
+
+        float z = player.position.z + spawnDistance + Random.Range(0f, spawnRandomOffset);
+        float y = spawnOffsetY;
+
+        return new Vector3(x, y, z);
+    }
+
+    private char PickLetterForSpawn()
+    {
+        string prefix = GameController.Instance.GetCurrentPrefix();
+        char nextLetter = wordManager.GetNextLetter(prefix);
+        // с небольшой вероятностью даём случайную частую букву
+        if (Random.value < 0.2f)
+        {
+            char[] frequent = new char[] { 'а', 'о', 'е', 'и', 'н', 'т', 'с', 'р', 'в', 'л' };
+            nextLetter = frequent[Random.Range(0, frequent.Length)];
+        }
+        return nextLetter;
+    }
+
+    public void HighlightLettersForWord(string word)
+    {
+        foreach (var obj in spawnedObjects)
+        {
+            if (obj == null) continue;
+            TextMeshPro tmp = obj.GetComponentInChildren<TextMeshPro>();
+            if (tmp != null && word.Contains(tmp.text))
+            {
+                tmp.color = Color.yellow;
+            }
+        }
+    }
+
+    public List<char> GetVisibleLetters()
+    {
+        List<char> result = new List<char>();
+        foreach (var obj in spawnedObjects)
+        {
+            if (obj == null) continue;
+            TextMeshPro tmp = obj.GetComponentInChildren<TextMeshPro>();
+            if (tmp != null && !string.IsNullOrEmpty(tmp.text))
+            {
+                result.Add(tmp.text[0]);
+            }
+        }
+        return result;
     }
 }
