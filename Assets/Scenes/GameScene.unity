@@ -288,17 +288,15 @@ MonoBehaviour:
   leftX: -3
   centerX: 0
   rightX: 3
-
-  spawnDistance: 25
+  spawnDistance: 20
   spawnOffsetY: 0.5
-  spawnRandomOffset: 3
+  spawnRandomOffset: 5
   despawnDistance: 5
-  minSpawnInterval: 1
+  minSpawnInterval: 2
   maxSpawnInterval: 3
-  spawnChance: 0.644
-  letterChance: 0.297
-  obstacleChance: 0.195
-
+  spawnChance: 0.5
+  letterChance: 0.65
+  obstacleChance: 0.35
   wordManager: {fileID: 777860895}
 --- !u!4 &208327026
 Transform:
@@ -1590,9 +1588,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1573dfa65b8a9054aa82efcbac14e24c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-
   dictionaryFile: {fileID: 4900000, guid: 74b3fcc5d90ec4543b6006711035f7e8, type: 3}
-
 --- !u!4 &777860896
 Transform:
   m_ObjectHideFlags: 0
@@ -3072,19 +3068,15 @@ MonoBehaviour:
   maxHP: 3
   hpText: {fileID: 266777667}
   scoreText: {fileID: 1940111503}
-
   collectedLettersText: {fileID: 587134502}
-
   usedWordsText: {fileID: 787150035}
   startOverButton: {fileID: 1376291139}
   wordManager: {fileID: 777860895}
   spawner: {fileID: 208327025}
   insightMax: 25
   insightCharge: 0
-
   insightBarFront: {fileID: 266764721}
   insightPanelKnob: {fileID: 1701654180}
-
 --- !u!4 &1644134668
 Transform:
   m_ObjectHideFlags: 0

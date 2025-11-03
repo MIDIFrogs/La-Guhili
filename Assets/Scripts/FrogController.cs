@@ -70,7 +70,7 @@ public class FrogController : MonoBehaviour
     {
         if (other.CompareTag("Letter"))
         {
-            Debug.Log("🐸 Лягушка подобрала букву: " + other.name);
+            Debug.Log("🐸 Лягушка подобрала букву: " + other.GetComponent<Letter>().GetChar());
             Destroy(other.gameObject);
         }
         else if (other.CompareTag("Obstacle"))

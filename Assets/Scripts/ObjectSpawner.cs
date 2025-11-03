@@ -36,6 +36,7 @@ public class ObjectSpawner : MonoBehaviour
     private Dictionary<int, Stack<GameObject>> rowStacks = new Dictionary<int, Stack<GameObject>>();
     private Dictionary<int, float> lastSpawnTime = new Dictionary<int, float>();
     private List<GameObject> spawnedObjects = new List<GameObject>();
+    char[] frequent = new char[] { 'а', 'о', 'е', 'и', 'н', 'т', 'с', 'р', 'в', 'л' };
 
     private void Start()
     {
@@ -96,7 +97,7 @@ public class ObjectSpawner : MonoBehaviour
         if (r < letterChance)
         {
             prefabToSpawn = letterPrefab;
-            letterChar = PickLetterForSpawn();
+            letterChar = PickLetterForSpawn(); //мб
         }
         else if (r < letterChance + obstacleChance)
         {
@@ -107,6 +108,10 @@ public class ObjectSpawner : MonoBehaviour
         Vector3 pos = GetSpawnPosition(row);
 
         GameObject obj = Instantiate(prefabToSpawn, pos, Quaternion.identity);
+        if (obj.TryGetComponent<Letter>(out Letter letterObj))
+        {
+            letterObj.SetLetter(letterChar);
+        }
         spawnedObjects.Add(obj);
         rowStacks[row].Push(obj);
 
@@ -142,7 +147,6 @@ public class ObjectSpawner : MonoBehaviour
         // с небольшой вероятностью даём случайную частую букву
         if (Random.value < 0.2f)
         {
-            char[] frequent = new char[] { 'а', 'о', 'е', 'и', 'н', 'т', 'с', 'р', 'в', 'л' };
             nextLetter = frequent[Random.Range(0, frequent.Length)];
         }
         return nextLetter;
