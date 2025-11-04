@@ -87,8 +87,8 @@ public class ObjectSpawner : MonoBehaviour
             else if (chance < 0.7f)
             {
                 // 20% шанс — препятствие
-                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
-                Instantiate(obstaclePrefab, pos, Quaternion.identity);
+                Vector3 pos = new Vector3(rowX, player.position.y-0.2f, player.position.z + spawnDistance);
+                Instantiate(obstaclePrefab, pos, obstaclePrefab.transform.rotation);
                 Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
             }
             // 50% шанс — ничего не спавним

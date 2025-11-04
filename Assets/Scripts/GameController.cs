@@ -10,12 +10,12 @@ public class GameController : MonoBehaviour
     [Header("References")]
     public ObjectSpawner spawner;
     public TMP_Text scoreText;
-    public TMP_Text hpText;
     public TMP_Text collectedText;
     public TMP_Text usedWordsText;
     public Image ultImage;
     public Ult ult;
-    
+    public LivesDisplayUI livesUI;
+
 
     public Button againButton; //желательно потом разделить логику
 
@@ -32,17 +32,17 @@ public class GameController : MonoBehaviour
     
     private void Start()
     {
-
         againButton.gameObject.SetActive(false);
         againButton.onClick.AddListener(RestartGame);
 
         hp = maxHP;
         score = 0;
+        livesUI.InitHearts(hp);
+        livesUI.SetLives(hp);
 
         wordManager = new WordManager();
         wordManager.LoadWords();
 
-        UpdateHP();
         UpdateScore();
         UpdateCollected();
         UpdateUsedWords();
@@ -128,15 +128,13 @@ public class GameController : MonoBehaviour
         if (gameOver) return;
 
         hp--;
+        livesUI.SetLives(hp);
         Debug.Log($"{reason} Осталось W {hp}");
-
-        UpdateHP();
 
         if (hp <= 0)
         {
             Debug.Log("☠️ Игра окончена!");
             gameOver = true;
-            hpText.text = "💀";
 
             againButton.gameObject.SetActive(true);
             Time.timeScale = 0f;
@@ -169,13 +167,6 @@ public class GameController : MonoBehaviour
         return sum;
     }
 
-    private void UpdateHP()
-    {
-        string hearts = "";
-        for (int i = 0; i < hp; i++) hearts += "❤️";
-        hpText.text = hearts;
-    }
-
     private void UpdateScore()
     {
         scoreText.text = score.ToString();
@@ -197,6 +188,7 @@ public class GameController : MonoBehaviour
     {
         Time.timeScale = 1f; // Возвращаем время
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Перезагружаем текущую сцену
+        hp = maxHP;
     }
 
     public char GetNextLetter()
