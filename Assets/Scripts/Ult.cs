@@ -9,6 +9,8 @@ public class Ult : MonoBehaviour
     public float constReloadTime = 25.0f;
     public float constUltimateTime = 10.0f;
 
+    public AudioManager audioManager;
+
     public Animator frogHeadAnimator;
     public RawImage headRawImage;
 
@@ -93,6 +95,7 @@ public class Ult : MonoBehaviour
 
     public void UltOn()
     {
+        audioManager.PlayRevelation();
         isUltNow = true;
         reloadTime = constReloadTime;
         ultimateTime = constUltimateTime;
