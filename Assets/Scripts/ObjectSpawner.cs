@@ -1,31 +1,34 @@
 ﻿using System.Collections;
-using UnityEngine;
-using TMPro;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ObjectSpawner : MonoBehaviour
 {
     [Header("References")]
-    public GameObject letterPrefab;
-    public GameObject obstaclePrefab;
     public Transform player;
+    public GameObject obstaclePrefab;
     public float despawnDistance = 5f;
 
     [Header("Spawn Settings")]
     public float spawnDistance = 25f;
     public float spawnInterval = 2f;
     public float rowOffset = 3.5f;
-    public int maxObjectsPerRow = 3;
 
     [Header("Height Settings")]
-    public float lettersY = 0.5f;       // Фиксированная высота для букв
-    public float obstaclesY = 0.2f;     // Фиксированная высота для препятствий
+    public float lettersY = 0.5f;
+    public float obstaclesY = 0.2f;
+
+    [Header("Letter Prefabs")]
+    [Tooltip("Список всех 3D-префабов букв в порядке алфавита.")]
+    public List<GameObject> letterPrefabs = new List<GameObject>();
 
     private float[] rows;
     private GameController gc;
 
     public WordManager wordManager;
-    public List<Letter> letterList = new List<Letter>();
+    [HideInInspector] public List<Letter> letterList = new List<Letter>();
+
+    private const string alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
 
     private void Start()
     {
@@ -36,7 +39,6 @@ public class ObjectSpawner : MonoBehaviour
     public IEnumerator StartSpawning()
     {
         Debug.Log("🌱 Начинаем спавн объектов...");
-
         while (true)
         {
             TrySpawnObjectsBatch();
@@ -59,7 +61,9 @@ public class ObjectSpawner : MonoBehaviour
                 if (gc.ult.HighlightLetter == letterList[j])
                     gc.UltHighLight();
 
-                Destroy(letterList[j].gameObject);
+                if (letterList[j].gameObject.scene.rootCount != 0)
+                    Destroy(letterList[j].gameObject);
+
                 letterList.RemoveAt(j);
             }
         }
@@ -73,28 +77,37 @@ public class ObjectSpawner : MonoBehaviour
 
             if (chance < 0.5f)
             {
-                // 30% шанс — буква
                 Vector3 pos = new Vector3(rowX, lettersY, player.position.z + spawnDistance);
                 SpawnLetter(pos);
             }
             else if (chance < 0.7f)
             {
-                // 20% шанс — препятствие
                 Vector3 pos = new Vector3(rowX, obstaclesY, player.position.z + spawnDistance);
                 Instantiate(obstaclePrefab, pos, obstaclePrefab.transform.rotation);
                 Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
             }
-            // 50% шанс — ничего не спавним
         }
     }
 
     private void SpawnLetter(Vector3 pos)
     {
-        GameObject go = Instantiate(letterPrefab, pos, Quaternion.identity);
-        TMP_Text txt = go.GetComponentInChildren<TMP_Text>();
+        if (letterPrefabs == null || letterPrefabs.Count == 0)
+        {
+            Debug.LogWarning("⚠️ Не заданы префабы букв в инспекторе!");
+            return;
+        }
 
         char c = Random.value <= 0.6f ? gc.GetNextLetter() : GetRandomRussianLetter();
-        txt.text = c.ToString();
+        GameObject prefab = GetLetterPrefab(c);
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"❌ Префаб для буквы '{c}' не найден!");
+            return;
+        }
+
+        GameObject go = Instantiate(prefab, pos, prefab.transform.rotation);
+        go.name = prefab.name + "_Instance";
 
         Letter letter = go.GetComponent<Letter>();
         if (letter != null)
@@ -103,12 +116,20 @@ public class ObjectSpawner : MonoBehaviour
             letterList.Add(letter);
         }
 
-        Debug.Log($"🔤 Спавн буквы '{c}' в позиции {pos}");
+        Debug.Log($"🔤 Спавн 3D-буквы '{c}' в позиции {pos}");
+    }
+
+    private GameObject GetLetterPrefab(char c)
+    {
+        int index = alphabet.IndexOf(c);
+        if (index < 0 || index >= letterPrefabs.Count)
+            return null;
+
+        return letterPrefabs[index];
     }
 
     private char GetRandomRussianLetter()
     {
-        const string alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
         return alphabet[Random.Range(0, alphabet.Length)];
     }
 }
