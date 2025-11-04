@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 public class MenuButtonManager : MonoBehaviour
 {
     [SerializeField] private Button playButton;
+    [SerializeField] private Button oButton;
     [SerializeField] private Button exitButton;
     
 
@@ -12,6 +13,7 @@ public class MenuButtonManager : MonoBehaviour
     {
         playButton.onClick.AddListener(OnPlayPressed);
         exitButton.onClick.AddListener(OnExitPressed);
+        oButton.onClick.AddListener(OnOButtonPressed);
     }
 
 
@@ -21,6 +23,11 @@ public class MenuButtonManager : MonoBehaviour
     private void OnPlayPressed()
     {
         SceneManager.LoadScene("GameScene");
+    }
+
+    private void OnOButtonPressed()
+    {
+        SceneManager.LoadScene("ObScene");
     }
 
 
