@@ -15,11 +15,19 @@ public class GameController : MonoBehaviour
     public Ult ult;
     public Image imageF;
     public LivesDisplayUI livesUI;
+    public Image panelLose; 
+    public Image panelPause; 
+    public TMP_Text recordText;
+    public TMP_Text bestRecordText;
     public AudioManager audioManager;
     private GameManager gameManager = GameManager.Instance;
 
 
-    public Button againButton; //желательно потом разделить логику
+
+    public Button againButton;
+    public Button btnNoPause;
+    public Button btnNoLose;
+    public Button btnYesPause;
 
     [Header("Settings")]
     public int maxHP = 3;
@@ -31,11 +39,17 @@ public class GameController : MonoBehaviour
     private int hp;
     private int score;
     private bool gameOver = false;
+    private bool isPaused = false;
     
     private void Start()
     {
-        againButton.gameObject.SetActive(false);
+        panelLose.gameObject.SetActive(false);
+        panelPause.gameObject.SetActive(false);
         againButton.onClick.AddListener(RestartGame);
+        btnNoPause.onClick.AddListener(GoToMenu);
+        btnNoLose.onClick.AddListener(GoToMenu);
+        btnYesPause.onClick.AddListener(Resume);
+
 
         hp = maxHP;
         score = 0;
@@ -87,6 +101,10 @@ public class GameController : MonoBehaviour
                 currentCollected = "";
                 UpdateCollected();
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape)){
+            Pause();
         }
 
         if(ult.isUltNow && ult.HighlightLetter == null)
@@ -147,6 +165,9 @@ public class GameController : MonoBehaviour
             gameManager.UpdateScore(score);
             Debug.Log("☠️ Игра окончена!");
             gameOver = true;
+            panelLose.gameObject.SetActive(true);
+            recordText.text = "Текущий результат: " + score.ToString();
+            bestRecordText.text = "Лучший результат: " + gameManager.GetScore().ToString();
 
             againButton.gameObject.SetActive(true);
             Time.timeScale = 0f;
@@ -209,4 +230,40 @@ public class GameController : MonoBehaviour
        
     }
 
+    public void Pause()
+    {
+        if (isPaused) return; // чтобы не вызывать несколько раз подряд
+
+        Time.timeScale = 0f; // останавливает игровое время
+        isPaused = true;
+
+        if (panelPause != null)
+            panelPause.gameObject.SetActive(true);
+
+        if (audioManager != null)
+            audioManager.PlayPausedMusic();
+
+        Debug.Log("⏸ Игра поставлена на паузу");
+    }
+
+    public void Resume()
+    {
+        panelPause.enabled = false;
+        Time.timeScale = 1f;
+        isPaused = false;
+
+        if (panelLose != null)
+            panelLose.gameObject.SetActive(false);
+
+        if (audioManager != null)
+            audioManager.PlayMusic();
+
+        Debug.Log("▶ Игра возобновлена");
+    }
+
+    public void GoToMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu");
+    }
 }
