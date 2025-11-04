@@ -39,14 +39,12 @@ public class FrogController : MonoBehaviour
         {
             currentLane = Mathf.Clamp(currentLane - 1, 0, 2);
             sound.PlaySwoosh();
-            animator.Play("LeftSlide", 0, 0f);
         }
 
         if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
         {
             currentLane = Mathf.Clamp(currentLane + 1, 0, 2);
             sound.PlaySwoosh();
-            animator.Play("RightSlide", 0, 0f);
         }
 
         float targetX = (currentLane - 1) * laneDistance;
