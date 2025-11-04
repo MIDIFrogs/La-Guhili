@@ -829,6 +829,7 @@ MonoBehaviour:
   imageF: {fileID: 1910930596}
   constReloadTime: 5
   constUltimateTime: 5
+  audioManager: {fileID: 1663283270}
   frogHeadAnimator: {fileID: 7798206199660867519}
   headRawImage: {fileID: 1562074463}
   isUltNow: 0
@@ -3333,6 +3334,8 @@ MonoBehaviour:
   letterCorrectClip: {fileID: 8300000, guid: 639b50d8f24f5b74696d1b15f8dc2e92, type: 3}
   letterWrongClip: {fileID: 8300000, guid: c1b5b46740d751c41be1835963abc225, type: 3}
   revelationClip: {fileID: 8300000, guid: acc2a518569687447be091d0e843b700, type: 3}
+  jumpClip: {fileID: 8300000, guid: f7b04fff8f6d795479502a65c2a87637, type: 3}
+  loseClip: {fileID: 0}
   smoothFromCenterToLeftClip: {fileID: 8300000, guid: 69e1cdc6183920e4ab12685f42065c8e, type: 3}
   smoothFromCenterToRightClip: {fileID: 8300000, guid: c87539b9cd6f18045afdcbd86ebff15d, type: 3}
   smoothFromLeftToCenterClip: {fileID: 8300000, guid: 1686b4b9b0207bb49986150b53598857, type: 3}

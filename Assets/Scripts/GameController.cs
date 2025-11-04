@@ -16,6 +16,7 @@ public class GameController : MonoBehaviour
     public Image imageF;
     public LivesDisplayUI livesUI;
     public AudioManager audioManager;
+    private GameManager gameManager = GameManager.Instance;
 
 
     public Button againButton; //желательно потом разделить логику
@@ -142,6 +143,8 @@ public class GameController : MonoBehaviour
 
         if (hp <= 0)
         {
+            audioManager.PlayLose();
+            gameManager.UpdateScore(score);
             Debug.Log("☠️ Игра окончена!");
             gameOver = true;
 

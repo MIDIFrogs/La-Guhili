@@ -23,6 +23,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip letterCorrectClip;
     [SerializeField] private AudioClip letterWrongClip;
     [SerializeField] private AudioClip revelationClip;
+    [SerializeField] private AudioClip jumpClip;
+    [SerializeField] private AudioClip loseClip;
 
     [Header("Movement Sounds")]
     [SerializeField] private AudioClip smoothFromCenterToLeftClip;
@@ -114,6 +116,8 @@ public class AudioManager : MonoBehaviour
     public void PlayFrogSound() => PlayRandomSFX(frogClips);
     public void PlayImpact() => PlaySFX(impactClip);
     public void PlayLanding() => PlaySFX(landingClip);
+    public void PlayJump() => PlaySFX(jumpClip);
+    public void PlayLose() => PlaySFX(loseClip);
     public void PlayLetterCorrect() => PlaySFX(letterCorrectClip);
     public void PlayLetterWrong() => PlaySFX(letterWrongClip);
     public void PlayRevelation() => PlaySFX(revelationClip);

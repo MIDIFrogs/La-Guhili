@@ -100,7 +100,7 @@ public class FrogController : MonoBehaviour
                                     transform.position.z + forwardSpeed * jumpDuration + jumpForwardBoost);
 
         animator.Play("Jump");
-        //sound.PlayJump();
+        audioManager.PlayJump();
     }
 
     private void HandleJump()
@@ -129,7 +129,7 @@ public class FrogController : MonoBehaviour
             finalPos.y = waterHeight;
             transform.position = finalPos;
             animator.Play("Idle");
-            //sound.PlayLand();
+            audioManager.PlayLanding();
         }
     }
 
