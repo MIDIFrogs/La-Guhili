@@ -1,99 +1,74 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
-public class EndlessRiver : MonoBehaviour
+public class EndlessRiverFixed : MonoBehaviour
 {
-    [Header("References")]
-    public Transform player;         
-    public GameObject waterPrefab;
+    public Transform player;
+    public GameObject riverSegmentPrefab;
+    public int initialSegments = 3;
+    public float yOffset = -0.5f;   // сдвиг сегмента вниз
+    public float playerHeight = 0.5f; // высота игрока над водой
 
-    public GameObject grassPrefab;
-
-    [Header("Settings")]
-    public int segmentCount = 3;     
-
-    //water segments
-    private GameObject[] segments;
+    private List<GameObject> segments = new List<GameObject>();
     private float segmentLength;
-    private float segmentWidth;
 
     void Start()
     {
-
-        getWaterSegmentLength();
-        getWaterSegmentWidth();
-
-
-        // 2️⃣ Создаём сегменты подряд по оси z (вдаль)
-        segments = new GameObject[segmentCount];
-
-
-        for (int i = 0; i < segmentCount; i++)
-        {
-            Vector3 pos = new Vector3(0, 0, i * segmentLength);
-            segments[i] = Instantiate(waterPrefab, pos, Quaternion.identity, transform);
-
-            PlaceGrassAtEdges(pos);
-        }
-
-
-    }
-
-    void Update()
-    {
-        for (int i = 0; i < segmentCount; i++)
-        {
-            if (player.position.z - segments[i].transform.position.z > segmentLength)
-            {
-                segments[i].transform.position += Vector3.forward * segmentLength * segmentCount;
-            }
-        }
-    }
-
-
-    private void getWaterSegmentLength()
-    {
-        MeshRenderer renderer = waterPrefab.GetComponent<MeshRenderer>();
+        // Длина сегмента по Z (только вода)
+        MeshRenderer renderer = riverSegmentPrefab.GetComponent<MeshRenderer>();
         if (renderer != null)
         {
             segmentLength = renderer.bounds.size.z;
         }
         else
         {
-            Debug.LogWarning("Water prefab has no MeshRenderer — using default segment length 10");
             segmentLength = 10f;
         }
 
-    }
-
-    private void getWaterSegmentWidth()
-    {
-        MeshRenderer renderer = waterPrefab.GetComponent<MeshRenderer>();
-        if (renderer != null)
+        // Создаём начальные сегменты
+        for (int i = 0; i < initialSegments; i++)
         {
-            segmentWidth = renderer.bounds.size.x;
-        }
-        else
-        {
-            Debug.LogWarning("Water prefab has no MeshRenderer — using default segment length 10");
-            segmentWidth = 10f;
+            Vector3 pos = new Vector3(0, yOffset, i * segmentLength);
+            GameObject segment = Instantiate(riverSegmentPrefab, pos, Quaternion.identity, transform);
+            AddCollider(segment);
+            segments.Add(segment);
         }
 
+        // Спавн игрока в центре первого сегмента
+        player.position = new Vector3(0, yOffset + playerHeight, 0);
     }
 
-
-    private void PlaceGrassAtEdges(Vector3 segmentPosition)
+    void Update()
     {
-        float grassOffsetX = segmentWidth + 0.01f; // ширина + небольшой зазор
-        float grassOffsetY = -0.05f; // чуть ниже, чтобы избежать мерцания
+        GameObject lastSegment = segments[segments.Count - 1];
 
-        Vector3 leftGrassPos = segmentPosition + new Vector3(-grassOffsetX, grassOffsetY, 0);
+        // Когда игрок приближается к концу последнего сегмента, создаём новый
+        if (player.position.z + segmentLength / 2f > lastSegment.transform.position.z)
+        {
+            // Смещаем новый сегмент на длину сегмента (учитывая Pivot в центре)
+            Vector3 newPos = lastSegment.transform.position + Vector3.forward * segmentLength;
+            GameObject newSegment = Instantiate(riverSegmentPrefab, newPos, Quaternion.identity, transform);
+            AddCollider(newSegment);
+            segments.Add(newSegment);
 
-        GameObject leftGrass = Instantiate(grassPrefab, leftGrassPos, Quaternion.identity, transform);
-
-        Vector3 rightGrassPos = segmentPosition + new Vector3(grassOffsetX, grassOffsetY, 0);
-
-        GameObject кшпреGrass = Instantiate(grassPrefab, rightGrassPos, Quaternion.identity, transform);
-
+            // Удаляем старый сегмент, если он далеко позади
+            if (segments.Count > initialSegments + 2)
+            {
+                Destroy(segments[0]);
+                segments.RemoveAt(0);
+            }
+        }
     }
 
+    private void AddCollider(GameObject segment)
+    {
+        if (segment.GetComponent<Collider>() == null)
+        {
+            MeshRenderer r = segment.GetComponent<MeshRenderer>();
+            float width = r ? r.bounds.size.x : 10f;
+            BoxCollider bc = segment.AddComponent<BoxCollider>();
+            bc.size = new Vector3(width, 0.1f, segmentLength);
+            bc.center = Vector3.zero; // центр коллайдера совпадает с Pivot
+        }
+    }
 }

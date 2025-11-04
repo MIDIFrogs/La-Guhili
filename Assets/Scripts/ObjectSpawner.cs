@@ -6,22 +6,25 @@ using System.Collections.Generic;
 public class ObjectSpawner : MonoBehaviour
 {
     [Header("References")]
-    public GameObject letterPrefab;     // Префаб с TMP_Text и компонентом Letter
-    public GameObject obstaclePrefab;   // Префаб препятствия
-    public Transform player;            // Ссылка на игрока
+    public GameObject letterPrefab;
+    public GameObject obstaclePrefab;
+    public Transform player;
     public float despawnDistance = 5f;
 
     [Header("Spawn Settings")]
-    public float spawnDistance = 25f;   // На каком расстоянии впереди игрока спавнится объект
-    public float spawnInterval = 2f;    // Интервал между спавнами
-    public float rowOffset = 3.5f;      // Расстояние между рядами (по оси X)
-    public int maxObjectsPerRow = 3;    // Чтобы не было наложений
+    public float spawnDistance = 25f;
+    public float spawnInterval = 2f;
+    public float rowOffset = 3.5f;
+    public int maxObjectsPerRow = 3;
 
-    private float[] rows;               // Координаты рядов по X
+    [Header("Height Settings")]
+    public float lettersY = 0.5f;       // Фиксированная высота для букв
+    public float obstaclesY = 0.2f;     // Фиксированная высота для препятствий
+
+    private float[] rows;
     private GameController gc;
 
     public WordManager wordManager;
-
     public List<Letter> letterList = new List<Letter>();
 
     private void Start()
@@ -30,9 +33,6 @@ public class ObjectSpawner : MonoBehaviour
         gc = FindObjectOfType<GameController>();
     }
 
-    /// <summary>
-    /// Запускает бесконечный цикл спавна объектов
-    /// </summary>
     public IEnumerator StartSpawning()
     {
         Debug.Log("🌱 Начинаем спавн объектов...");
@@ -44,10 +44,8 @@ public class ObjectSpawner : MonoBehaviour
         }
     }
 
-
     private void Update()
     {
-        // Дестрой объектов, которые остались позади игрока
         for (int j = letterList.Count - 1; j >= 0; j--)
         {
             if (letterList[j] == null)
@@ -58,20 +56,15 @@ public class ObjectSpawner : MonoBehaviour
 
             if (player.position.z - letterList[j].transform.position.z > despawnDistance)
             {
-                if(gc.ult.HighlightLetter == letterList[j])
-                {
+                if (gc.ult.HighlightLetter == letterList[j])
                     gc.UltHighLight();
-                }
+
                 Destroy(letterList[j].gameObject);
                 letterList.RemoveAt(j);
-                
             }
         }
     }
 
-    /// <summary>
-    /// Один цикл спавна: проверяет все ряды и спавнит объекты с шансом
-    /// </summary>
     private void TrySpawnObjectsBatch()
     {
         foreach (float rowX in rows)
@@ -81,13 +74,13 @@ public class ObjectSpawner : MonoBehaviour
             if (chance < 0.5f)
             {
                 // 30% шанс — буква
-                Vector3 pos = new Vector3(rowX, player.position.y, player.position.z + spawnDistance);
+                Vector3 pos = new Vector3(rowX, lettersY, player.position.z + spawnDistance);
                 SpawnLetter(pos);
             }
             else if (chance < 0.7f)
             {
                 // 20% шанс — препятствие
-                Vector3 pos = new Vector3(rowX, player.position.y-0.2f, player.position.z + spawnDistance);
+                Vector3 pos = new Vector3(rowX, obstaclesY, player.position.z + spawnDistance);
                 Instantiate(obstaclePrefab, pos, obstaclePrefab.transform.rotation);
                 Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
             }
@@ -95,28 +88,14 @@ public class ObjectSpawner : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Создает букву на указанной позиции
-    /// </summary>
     private void SpawnLetter(Vector3 pos)
     {
         GameObject go = Instantiate(letterPrefab, pos, Quaternion.identity);
-
-        // Находим TMP-текст внутри префаба и задаем букву
         TMP_Text txt = go.GetComponentInChildren<TMP_Text>();
-        int chance = Random.Range(1, 100);
-        char c = ' ';
-        if (chance <= 60)
-        {
-            c = gc.GetNextLetter();
-        }
-        else
-        {
-            c = GetRandomRussianLetter();
-        }
+
+        char c = Random.value <= 0.6f ? gc.GetNextLetter() : GetRandomRussianLetter();
         txt.text = c.ToString();
 
-        // Записываем в сам компонент Letter
         Letter letter = go.GetComponent<Letter>();
         if (letter != null)
         {
@@ -127,9 +106,6 @@ public class ObjectSpawner : MonoBehaviour
         Debug.Log($"🔤 Спавн буквы '{c}' в позиции {pos}");
     }
 
-    /// <summary>
-    /// Возвращает случайную букву из русского алфавита
-    /// </summary>
     private char GetRandomRussianLetter()
     {
         const string alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
