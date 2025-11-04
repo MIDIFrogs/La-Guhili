@@ -5,6 +5,7 @@ using System.Collections;
 public class Ult : MonoBehaviour
 {
     public Image ultImage;
+    public Image imageF;
     public float constReloadTime = 25.0f;
     public float constUltimateTime = 10.0f;
 
@@ -45,6 +46,16 @@ public class Ult : MonoBehaviour
 
     private void Update()
     {
+        if(reloadTime > 0)
+        {
+            imageF.enabled = false;
+        }
+
+        else
+        {
+            imageF.enabled = true;
+        }
+
         if (!isUltNow)
         {
             reloadTime -= Time.deltaTime;

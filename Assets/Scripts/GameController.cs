@@ -12,9 +12,10 @@ public class GameController : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text collectedText;
     public TMP_Text usedWordsText;
-    public Image ultImage;
     public Ult ult;
+    public Image imageF;
     public LivesDisplayUI livesUI;
+    public AudioManager audioManager;
 
 
     public Button againButton; //желательно потом разделить логику
@@ -60,7 +61,7 @@ public class GameController : MonoBehaviour
         if (gameOver) return;
 
         // Проверяем нажатие пробела — подтверждение слова
-        if (Input.GetKeyDown(KeyCode.Space))
+        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
         {
             Debug.Log("Space pressed");
 
@@ -95,6 +96,7 @@ public class GameController : MonoBehaviour
 
     public void OnLetterCollected(Letter letterObj)
     {
+        audioManager.PlayBuble();
         char letter = letterObj.letter;
         currentCollected += char.ToUpper(letter);
 
@@ -104,8 +106,13 @@ public class GameController : MonoBehaviour
         if (!wordManager.IsPossibleWord(currentCollected))
         {
             LoseHP("⚠️ Префикс невозможен!");
+            audioManager.PlayLetterWrong();
             currentCollected = "";
             ult.UltOff();
+        }
+        else
+        {
+            audioManager.PlayLetterCorrect();
         }
         UpdateCollected();
         UltHighLight(); 
@@ -121,10 +128,12 @@ public class GameController : MonoBehaviour
     public void OnObstacleHit()
     {
         LoseHP("💥 Столкновение с препятствием!" + gameOver);
+        audioManager.PlayImpact();
     }
 
     private void LoseHP(string reason)
     {
+        audioManager.PlayDamageTaken();
         if (gameOver) return;
 
         hp--;
