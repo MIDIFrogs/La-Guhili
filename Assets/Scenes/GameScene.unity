@@ -902,7 +902,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 417875108}
-  obstaclePrefab: {fileID: 8386074219594276816, guid: 710e75d75fa6c3e4bb24f8a52006f0ee, type: 3}
+  obstaclePrefab1: {fileID: 8386074219594276816, guid: 710e75d75fa6c3e4bb24f8a52006f0ee, type: 3}
+  obstaclePrefab2: {fileID: 8994151104069494161, guid: 6710cc39cdbefcb499ac17f40a06345a, type: 3}
+  obstaclePrefab3: {fileID: 2145004271907831576, guid: 74862ac507fce504baa600426274dad8, type: 3}
+  obstaclePrefab4: {fileID: 1557782289550440981, guid: 5f1c4ede8b4201946bcc95862f5e51c2, type: 3}
   despawnDistance: 7
   spawnDistance: 25
   spawnInterval: 1.5

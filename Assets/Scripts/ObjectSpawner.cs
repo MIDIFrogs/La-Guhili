@@ -6,7 +6,10 @@ public class ObjectSpawner : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
-    public GameObject obstaclePrefab;
+    public GameObject obstaclePrefab1;
+    public GameObject obstaclePrefab2;
+    public GameObject obstaclePrefab3;
+    public GameObject obstaclePrefab4;
     public float despawnDistance = 5f;
 
     [Header("Spawn Settings")]
@@ -83,6 +86,28 @@ public class ObjectSpawner : MonoBehaviour
             else if (chance < 0.8f)
             {
                 Vector3 pos = new Vector3(rowX, obstaclesY, player.position.z + spawnDistance);
+                var obstaclePrefab = obstaclePrefab1;
+                var r = Random.Range(1, 4);
+                if (r == 1)
+                {
+                    obstaclePrefab = obstaclePrefab1;
+                }
+
+                else if (r == 2)
+                {
+                    obstaclePrefab = obstaclePrefab2;
+                }
+
+                else if(r == 3)
+                {
+                    obstaclePrefab = obstaclePrefab3;
+                }
+
+                else if(r == 4)
+                {
+                    obstaclePrefab = obstaclePrefab4;
+                }
+
                 Instantiate(obstaclePrefab, pos, obstaclePrefab.transform.rotation);
                 Debug.Log($"🚧 Спавн препятствия в ряду {rowX}");
             }
