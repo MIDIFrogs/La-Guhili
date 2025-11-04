@@ -202,7 +202,7 @@ public class GameController : MonoBehaviour
 
     private void UpdateScore()
     {
-        scoreText.text = score.ToString();
+        scoreText.text = "Очки: " + score.ToString();
     }
 
     private void UpdateCollected()
