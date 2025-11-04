@@ -75,12 +75,12 @@ public class ObjectSpawner : MonoBehaviour
         {
             float chance = Random.value;
 
-            if (chance < 0.5f)
+            if (chance < 0.6f)
             {
                 Vector3 pos = new Vector3(rowX, lettersY, player.position.z + spawnDistance);
                 SpawnLetter(pos);
             }
-            else if (chance < 0.7f)
+            else if (chance < 0.8f)
             {
                 Vector3 pos = new Vector3(rowX, obstaclesY, player.position.z + spawnDistance);
                 Instantiate(obstaclePrefab, pos, obstaclePrefab.transform.rotation);

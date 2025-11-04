@@ -116,7 +116,7 @@ public class AudioManager : MonoBehaviour
     public void PlayFrogSound() => PlayRandomSFX(frogClips);
     public void PlayImpact() => PlaySFX(impactClip);
     public void PlayLanding() => PlaySFX(landingClip);
-    public void PlayJump() => PlaySFX(jumpClip);
+    public void PlayJump() {}
     public void PlayLose() => PlaySFX(loseClip);
     public void PlayLetterCorrect() => PlaySFX(letterCorrectClip);
     public void PlayLetterWrong() => PlaySFX(letterWrongClip);

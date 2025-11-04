@@ -21,12 +21,15 @@ public class GameController : MonoBehaviour
     public TMP_Text bestRecordText;
     public AudioManager audioManager;
     private GameManager gameManager = GameManager.Instance;
+    
 
 
 
     public Button againButton;
     public Button btnNoPause;
     public Button btnNoLose;
+    public Button btnCrossPause;
+    public Button btnCrossLose;
     public Button btnYesPause;
 
     [Header("Settings")]
@@ -47,6 +50,8 @@ public class GameController : MonoBehaviour
         panelPause.gameObject.SetActive(false);
         againButton.onClick.AddListener(RestartGame);
         btnNoPause.onClick.AddListener(GoToMenu);
+        btnCrossLose.onClick.AddListener(GoToMenu);
+        btnCrossPause.onClick.AddListener(Resume);
         btnNoLose.onClick.AddListener(GoToMenu);
         btnYesPause.onClick.AddListener(Resume);
 
@@ -248,7 +253,7 @@ public class GameController : MonoBehaviour
 
     public void Resume()
     {
-        panelPause.enabled = false;
+        panelPause.gameObject.SetActive(false);
         Time.timeScale = 1f;
         isPaused = false;
 
